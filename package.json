@@ -1,0 +1,24 @@
+{
+  "name": "@kiruse/monk",
+  "module": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "lint": "eslint src",
+    "prepack": "npm run build",
+    "test": "bun test src/**/*.spec.ts"
+  },
+  "dependencies": {
+    "@kiruse/marshal": "^0.1.2-fix.1",
+    "@kiruse/typed-events": "^1.0.3",
+    "mongodb": "^6.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.13",
+    "typescript": "^5.0.0"
+  },
+  "peerDependencies": {
+    "yaml": "^2.4.2"
+  }
+}
