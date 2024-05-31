@@ -2,6 +2,11 @@
   "name": "@kiruse/monk",
   "module": "dist/index.js",
   "type": "module",
+  "exports": {
+    ".": "./dist/index.js",
+    "./ts": "./src/index.ts",
+    "./ts/*": "./dist/*"
+  },
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist",
