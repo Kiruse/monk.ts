@@ -1,8 +1,8 @@
 services:
   mongo:
-    profile:
+    profiles:
       - test
     image: mongo:4.0
     container_name: mongo
     ports:
-      - "27017:27017"
+      - "27072:27017"

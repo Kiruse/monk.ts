@@ -1,5 +1,6 @@
 import { IgnoreMarshalUnit, defineMarshalUnit, extendDefaultMarshaller, morph, pass } from '@kiruse/marshal';
 import { ObjectId } from 'mongodb';
+import { omit } from './util.js';
 
 export const MongoIDRenamer = defineMarshalUnit(
   (value: any, passback) => typeof value === 'object' && value?.id instanceof ObjectId

@@ -47,11 +47,12 @@ export class Monk {
     await this.#client.connect();
     this.#client.on('close', this.#onClose);
     this.#client.on('error', this.#onError);
+    return this;
   }
 
   async reconnect() {
     this.close();
-    await this.connect();
+    return await this.connect();
   }
 
   close() {
@@ -62,6 +63,7 @@ export class Monk {
       cli.close();
       this.#client = undefined;
     }
+    return this;
   }
 
   getDb(name: string) {
