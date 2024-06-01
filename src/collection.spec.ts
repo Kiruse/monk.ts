@@ -24,6 +24,25 @@ test('monk queries arbitrary documents', async () => {
   await expect(q2.findOne()).resolves.toMatchObject({ bar: 'foo' });
 });
 
+test('monk sorts queried documents', async () => {
+  interface TestType {
+    foo: string;
+    order: number;
+  }
+
+  const db = await getDb();
+  const coll = db.collection('foo');
+  const ids = await Promise.all([
+    coll.save({ foo: 'foo',  order: 2 }),
+    coll.save({ foo: 'bar',  order: 1 }),
+    coll.save({ foo: 'baz',  order: 4 }),
+    coll.save({ foo: 'quux', order: 3 }),
+  ]);
+
+  const res = await coll.query<TestType>().has('order').find().sort('order').collect();
+  expect(res.map(d => d.order)).toMatchObject([1, 2, 3, 4]);
+});
+
 afterAll(async () => {
   const db = await getDb();
   await db.deleteDb('test').catch();

@@ -1,4 +1,4 @@
-import { Collection as MongoCollection, ObjectId } from 'mongodb';
+import { Collection as MongoCollection, FindCursor as MongoCursor, ObjectId } from 'mongodb';
 import { createQuery, type MonkQuery } from './query.js';
 import type { Monk } from './monk.js';
 import { checkPojo, type DeepPartial } from './util.js';
@@ -11,17 +11,14 @@ export class Collection<DOC = any> {
     return doc ? this.client.unmarshal(doc) as any : null;
   }
 
-  findOne = <T = DOC>(query: MonkQuery<{}, T>) =>
-    this.collection.findOne(
+  find = <T = DOC>(query: MonkQuery<{}, T>) =>
+    new Cursor(this, query, this.collection.find(
       query.toQuery(),
       { projection: query.getProjection() },
-    ).then(doc => doc ? this.client.unmarshal(doc) as T : null);
+    ));
 
-  findAll = <T = DOC>(query: MonkQuery<{}, T>) =>
-    this.collection.find(
-      query.toQuery(),
-      { projection: query.getProjection() },
-    ).toArray().then(docs => docs.map(this.client.unmarshal) as T[]);
+  findOne = <T = DOC>(query: MonkQuery<{}, T>) => this.find(query).next();
+  findAll = <T = DOC>(query: MonkQuery<{}, T>) => this.find(query).collect();
 
   update = <T = DOC>(query: MonkQuery<{}, T>, update: DeepPartial<T>) =>
     this.collection.updateMany(query.toQuery(), { $set: this.client.marshal(update) as any });
@@ -33,6 +30,7 @@ export class Collection<DOC = any> {
   deleteOneBy = <T = DOC>(query: MonkQuery<{}, T>) => this.collection.deleteOne(query.toQuery());
 
   query = <T = DOC>() => createQuery.bindDocType<T>()(this, (qry) => ({
+    find: () => this.find<T>(qry),
     findAll: () => this.findAll<T>(qry),
     findOne: () => this.findOne<T>(qry),
     update: (update: DeepPartial<T>) => this.update<T>(qry, update),
@@ -57,5 +55,43 @@ export class Collection<DOC = any> {
       const res = await this.collection.deleteOne({ _id: id });
       return res.deletedCount > 0;
     }
+  }
+}
+
+export class Cursor<DOC = any> {
+  #cursor: MongoCursor;
+
+  constructor(
+    public readonly collection: Collection,
+    public readonly query: MonkQuery<{}, DOC>,
+    cursor: MongoCursor,
+  ) {
+    this.#cursor = cursor;
+  }
+
+  close = () => this.#cursor.close();
+
+  sort = (...fields: (string | [string, 1 | -1])[]) => {
+    this.#cursor = this.#cursor.sort(
+      Object.fromEntries(fields.map(f => Array.isArray(f) ? f : [f, 1]))
+    );
+    return this;
+  }
+
+  limit = (n: number) => {
+    this.#cursor = this.#cursor.limit(n);
+    return this;
+  }
+
+  next = () => this.#cursor.next().then(doc => doc ? this.collection.client.unmarshal(doc) as DOC : null);
+  collect = () => this.#cursor.toArray().then(docs => docs.map(this.collection.client.unmarshal) as DOC[]);
+  hasNext = () => this.#cursor.hasNext();
+  tryNext = () => this.#cursor.tryNext().then(doc => doc ? this.collection.client.unmarshal(doc) as DOC : null);
+
+  clone = () => new Cursor(this.collection, this.query, this.#cursor.clone());
+  retype = <T>() => new Cursor<T>(this.collection, this.query as any, this.#cursor);
+
+  get closed() {
+    return this.#cursor.closed;
   }
 }
