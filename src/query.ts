@@ -108,7 +108,7 @@ export function createQuery<API extends object = {}, DOC = any>(
 
   const result: any = {
     is(fieldname: string, value: any) {
-      query[fieldname] = value;
+      query[fieldname] = Object.assign(query[fieldname] ?? {}, value);
       return this;
     },
     has(fieldname: string, value = true) { return this.is(fieldname, { $exists: value }) },
