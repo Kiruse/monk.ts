@@ -2,7 +2,7 @@
   "name": "@kiruse/monk",
   "module": "dist/index.js",
   "type": "module",
-  "version": "0.1.1-fix.2",
+  "version": "0.1.2",
   "exports": {
     ".": "./dist/index.js",
     "./ts": "./src/index.ts",
@@ -18,7 +18,7 @@
     "testenv:down": "docker compose --profile test down"
   },
   "dependencies": {
-    "@kiruse/marshal": "^0.1.2-fix.1",
+    "@kiruse/marshal": "^0.2.0-rc.1",
     "@kiruse/typed-events": "^1.0.3",
     "mongodb": "^6.7.0"
   },
